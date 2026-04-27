@@ -4,3 +4,8 @@ spring:
     url: jdbc:mysql://localhost/vollmed
     username: root
     password: QualquersenhaH1I&
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
