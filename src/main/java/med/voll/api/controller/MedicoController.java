@@ -6,8 +6,10 @@ import med.voll.api.medicos.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 
 @RestController
@@ -19,26 +21,34 @@ public class MedicoController {
 
     @PostMapping
     @Transactional
-    public void cadastrar(@RequestBody @Valid DadosMedicos dadosMedicos){
-        repository.save(new Medico(dadosMedicos));
+    public ResponseEntity cadastrar(@RequestBody @Valid DadosMedicos dadosMedicos, UriComponentsBuilder uriBuilder){
+        var medico = new Medico(dadosMedicos);
+        repository.save(medico);
+
+        var uri = uriBuilder.path("/medicos/{id}").buildAndExpand(medico.getId()).toUri();
+
+        return ResponseEntity.created(uri).body(new DadosDetalhamentoMedico(medico));
     }
 
     @GetMapping
-    public Page<DadosListagemMedicos> listar(Pageable pageable){
-        return repository.findAllByAtivoTrue(pageable).map(DadosListagemMedicos::new);
+    public ResponseEntity<Page<DadosListagemMedicos>> listar(Pageable pageable){
+        var page = repository.findAllByAtivoTrue(pageable).map(DadosListagemMedicos::new);
+        return ResponseEntity.ok(page);
     }
 
     @PutMapping
     @Transactional
-    public void atualizar(@RequestBody @Valid DadosAtualizacaoMedicos dadosMedicos){
+    public ResponseEntity atualizar(@RequestBody @Valid DadosAtualizacaoMedicos dadosMedicos){
         Medico medico = repository.getReferenceById(dadosMedicos.id());
         medico.atualizarMedicos(dadosMedicos);
+        return ResponseEntity.ok(new DadosDetalhamentoMedico(medico));
     }
 
     @DeleteMapping("/{id}")
     @Transactional
-    public void remover(@PathVariable Long id){
+    public ResponseEntity remover(@PathVariable Long id){
         Medico medico = repository.getReferenceById(id);
         medico.remover();
+        return ResponseEntity.noContent().build();
     }
 }
